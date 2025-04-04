@@ -1121,21 +1121,10 @@ else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
 
-def load_pickle_from_dropbox(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return pickle.loads(response.content)
+
 
 def main():
-    dropbox_url = "https://www.dropbox.com/scl/fi/6041c611wakx5h5dlwgye/catalogo_embeddings.pkl?rlkey=2dx7inb727nvbi3gak0ht1p7c&st=jvc8c0ys&dl=1"
-    try:
-        st.info("Downloading file from Dropbox...")
-        catalogo_embeddings = load_pickle_from_dropbox(dropbox_url)
-        st.success("File loaded successfully!")
-        st.write(type(catalogo_embeddings))  # display data type
-    except Exception as e:
-        st.error("Something went wrong!")
-        st.exception(e)
+
 
     def comments():
         """ Idea
