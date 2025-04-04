@@ -1174,7 +1174,7 @@ def main():
     file_id = '1wzHNCb1G-hRNfOkRVwWHBe18vlyGSfDa'
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
     response = requests.get(url)
-    st.write(response.url)
+    st.write(response.content)
     catalogo_embeddings =  pickle.loads(response.content)
     if 'catalogo_embeddings' not in st.session_state:
         st.session_state['catalogo_embeddings'] = catalogo_embeddings
