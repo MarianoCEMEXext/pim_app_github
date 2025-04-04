@@ -1060,11 +1060,20 @@ if api_key_input:
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
-def main():
-    file_path = hf_hub_download(repo_id="Mariano132/catalogo_embeddings", filename="catalogo_embeddings.h5")
+def load_from_huggingface():
+    file_path = hf_hub_download(
+        repo_id="Mariano132/catalogo_embeddings",
+        filename="catalogo_embeddings.h5",
+        repo_type="dataset"
+    )
+    
     with h5py.File(file_path, "r") as f:
         dataset_name = list(f.keys())[0]
-        catalogo_embeddings = f[dataset_name][()]
+        embeddings = f[dataset_name][()]
+    return embeddings
+
+def main():
+    catalogo_embeddings = load_from_huggingface()
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
