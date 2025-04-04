@@ -795,7 +795,6 @@ def obtener_embeddings_fabricante(names, batch_size):
     
     embeddings = []
     for i in (range(0, len(names), batch_size)):
-        st.write(i)
         batch = names[i:i + batch_size]
         embeddings_batch = client.embeddings.create(
             input=batch,
