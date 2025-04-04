@@ -858,12 +858,13 @@ def match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for
         not_found: list, lista de productos no encontrados.
         fabricante_bad_marca_bad_unidad: list, lista de productos con fabricante, marca y unidad de medida incorrectos.
     """
-    
+    st.write("Aqui")
     tienda_numero_fabricante = df_tienda[TIENDA_NUMERO_FABRICANTE]
     tienda_nombre = df_tienda[TIENDA_NOMBRE]
     tienda_marca = df_tienda[TIENDA_CATALOGO_MARCA]
     tienda_unidad_medida = df_tienda[TIENDA_UNIDAD_MEDIDA]
 
+    st.write("Aqui 2")
     catalogo_codigo_sku = df_catalogo[CATALOGO_CODIGO_SKU]
     catalogo_numero_fabricante = df_catalogo[CATALOGO_NUMERO_FABRICANTE]
     catalogo_nombre_sku = df_catalogo[CATALOGO_NOMBRE_SKU]
