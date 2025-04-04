@@ -1121,42 +1121,24 @@ else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
 
+import gdown
+
 @st.cache_data
-def download_large_file_from_gdrive(file_id):
-    def get_confirm_token(response):
-        for key, value in response.cookies.items():
-            if key.startswith('download_warning'):
-                return value
-        return None
+def load_pickle_with_gdown(file_id):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    output = "/tmp/catalogo_embeddings.pkl"  # temp file path
+    gdown.download(url, output, quiet=False)
+    
+    with open(output, "rb") as f:
+        return pickle.load(f)
 
-    def save_response_content(response):
-        return b"".join(response.iter_content(32768))  # 32KB chunks
-
-    URL = "https://docs.google.com/uc?export=download"
-    session = requests.Session()
-
-    response = session.get(URL, params={'id': file_id}, stream=True)
-    token = get_confirm_token(response)
-
-    if token:
-        params = {'id': file_id, 'confirm': token}
-        response = session.get(URL, params=params, stream=True)
-
-    return save_response_content(response)
-
-def load_pickle_from_gdrive(file_id):
-    content = download_large_file_from_gdrive(file_id)
-    return pickle.loads(content)
-
-# Your file ID
 file_id = "1wzHNCb1G-hRNfOkRVwWHBe18vlyGSfDa"
 
 try:
-    catalogo_embeddings = load_pickle_from_gdrive(file_id)
+    catalogo_embeddings = load_pickle_with_gdown(file_id)
     st.success("Pickle file loaded successfully!")
-    # Do something with catalogo_embeddings...
 except Exception as e:
-    st.error("Could not load pickle file.")
+    st.error("Failed to load pickle file.")
     st.exception(e)
 
 
