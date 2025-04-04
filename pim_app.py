@@ -31,12 +31,10 @@ if api_key_input:
     if 'client' not in st.session_state:
         st.session_state['client'] = AzureOpenAI(
             api_key=st.session_state['api_key'],
-            api_version='https://uscldgaioas01.openai.azure.com',
-            azure_endpoint='2024-06-01'
+            api_version='2024-06-01',
+            azure_endpoint='https://uscldgaioas01.openai.azure.com'
         )
     client = st.session_state['client']
-    st.write(st.session_state['client'])
-    st.write(st.session_state['api_key'])
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
