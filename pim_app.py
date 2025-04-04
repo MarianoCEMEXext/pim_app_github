@@ -858,19 +858,18 @@ def match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for
         not_found: list, lista de productos no encontrados.
         fabricante_bad_marca_bad_unidad: list, lista de productos con fabricante, marca y unidad de medida incorrectos.
     """
-    st.write("Aqui")
     tienda_numero_fabricante = df_tienda[TIENDA_NUMERO_FABRICANTE]
     tienda_nombre = df_tienda[TIENDA_NOMBRE]
     tienda_marca = df_tienda[TIENDA_CATALOGO_MARCA]
     tienda_unidad_medida = df_tienda[TIENDA_UNIDAD_MEDIDA]
 
-    st.write("Aqui 2")
     catalogo_codigo_sku = df_catalogo[CATALOGO_CODIGO_SKU]
     catalogo_numero_fabricante = df_catalogo[CATALOGO_NUMERO_FABRICANTE]
     catalogo_nombre_sku = df_catalogo[CATALOGO_NOMBRE_SKU]
     catalogo_marca = df_catalogo[TIENDA_CATALOGO_MARCA]
     catalogo_unidad_medida = df_catalogo[CATALOGO_UNIDAD_MEDIDA]
 
+    st.write('Diccionario')
     catalogo_dict = {
         numero_fabricante: (codigo_sku, nombre_sku, marca, unidad_medida)
         for numero_fabricante, codigo_sku, nombre_sku, marca, unidad_medida in zip(
@@ -927,6 +926,7 @@ def match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for
         for i, fabricante in enumerate(fabricante_bad_marca_bad_unidad):
             names.append(clean_text(f"{fabricante[MARCA_CATALOGO]}, {fabricante[NOMBRE_TIENDA]}, {fabricante[UNIDAD_CATALOGO]}")) 
 
+        st.write('Empezar embeddings')
         tienda_embeddings = obtener_embeddings_fabricante(names, batch_size)
     
         D, I = calc_similarity(tienda_embeddings, catalogo_embeddings, 1)
