@@ -34,7 +34,6 @@ if api_key_input:
             api_version='2024-06-01',
             azure_endpoint='https://uscldgaioas01.openai.azure.com'
         )
-    client = st.session_state['client']
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
@@ -795,7 +794,7 @@ def obtener_embeddings_fabricante(names, batch_size):
     embeddings = []
     for i in (range(0, len(names), batch_size)):
         batch = names[i:i + batch_size]
-        embeddings_batch = client.embeddings.create(
+        embeddings_batch = st.session_state['client'].embeddings.create(
             input=batch,
             model="CNS_Construsync_02_ada002"
         )
