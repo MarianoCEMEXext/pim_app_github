@@ -1120,12 +1120,7 @@ if api_key_input:
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
-
-
-
 def main():
-
-
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
@@ -1176,7 +1171,7 @@ def main():
         """
         pass
 
-    if st.session_state['api_key'] and st.session_state['catalogo_embeddings']:
+    if st.session_state['api_key']:
         path = os.getcwd()
         path = path.replace('\\', '/')
 
@@ -1248,7 +1243,7 @@ def main():
                 df_catalogo, df_tienda = cargar_y_limpiar_articulos(df_catalogo, df_tienda)
 
                 st.write("Obteniendo datos del catálogo...")
-                catalogo_embeddings = st.session_state['catalogo_embeddings']
+                catalogo_embeddings = 'a'
 
                 st.write("Haciendo match de los productos...")
                 fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
