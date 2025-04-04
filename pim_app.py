@@ -858,6 +858,7 @@ def match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for
         not_found: list, lista de productos no encontrados.
         fabricante_bad_marca_bad_unidad: list, lista de productos con fabricante, marca y unidad de medida incorrectos.
     """
+    
     tienda_numero_fabricante = df_tienda[TIENDA_NUMERO_FABRICANTE]
     tienda_nombre = df_tienda[TIENDA_NOMBRE]
     tienda_marca = df_tienda[TIENDA_CATALOGO_MARCA]
@@ -1183,6 +1184,7 @@ def main():
             
                 fabricantes_match.extend(nombres_match)
                 df_response = pd.DataFrame(fabricantes_match)
+
                 st.write("Calculando similitud por variable...")
                 df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_CODIGO_FABRICANTE, CODIGO_FABRICANTE_CATALOGO, CODIGO_FABRICANTE_TIENDA, batch_size, target_tienda, path)
                 df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_NOMBRE, NOMBRE_CATALOGO, NOMBRE_TIENDA, batch_size, target_tienda, path)
