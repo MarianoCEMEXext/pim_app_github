@@ -788,33 +788,6 @@ def obtener_embeddings_fabricante(names, batch_size):
     return embeddings
 
 
-def obtener_embeddings_catalogo(catalogo_embeddings_path, df_catalogo, batch_size):
-    """
-        Obtiene los embeddings del catálogo.
-        Input:
-            catalogo_embeddings_path: str, ruta del archivo con los embeddings del catálogo.
-            df_catalogo: DataFrame, productos del catálogo.
-            batch_size: int, tamaño de los
-        Output:
-            catalogo_embeddings: list, lista de embeddings del catálogo.
-    """
-    if os.path.exists(catalogo_embeddings_path):
-        with open(catalogo_embeddings_path, 'rb') as f:
-            catalogo_embeddings = pickle.load(f)
-    else:
-        catalogo_text = []
-        for i, marca in enumerate(df_catalogo[TIENDA_CATALOGO_MARCA]):
-            if marca.lower() in ['generico', 'génerico', 'genérico']:
-                catalogo_text.append(clean_text(f'{df_catalogo[TIENDA_CATALOGO_MARCA][i]}, {df_catalogo[CATALOGO_NOMBRE_SKU][i]}'))
-            else:
-                catalogo_text.append(clean_text(df_catalogo[CATALOGO_NOMBRE_SKU][i]))
-        catalogo_embeddings = obtener_embeddings_fabricante(df_catalogo[CATALOGO_NOMBRE_SKU], batch_size)
-        with open(catalogo_embeddings_path, 'wb') as f:
-            pickle.dump(catalogo_embeddings, f)
-
-    return catalogo_embeddings
-
-
 def calc_similarity(tienda_embeddings, catalogo_embeddings, k):
     """
     Calcula la similitud entre los embeddings de la tienda y los embeddings del catálogo.
@@ -1197,7 +1170,18 @@ def main():
         """
         pass
     
-    if st.session_state['api_key']:
+    if 'catalogo_embeddings' not in st.session_state:
+        st.session_state['catalogo_embeddings'] = None
+
+    catalogo_embeddings_input = st.file_uploader("Selecciona el archivo de embeddings del catálogo", type=['pkl'])
+    if catalogo_embeddings_input:
+        st.session_state['catalogo_embeddings'] = catalogo_embeddings_input.name.split('.')[0]
+        with open(catalogo_embeddings_input, 'rb') as f:
+            st.session_state['catalogo_embeddings'] = pickle.load(f)
+    else:
+        st.warning("Por favor, selecciona el archivo de embeddings del catálogo para continuar.")
+
+    if st.session_state['api_key'] and st.session_state['catalogo_embeddings']:
         path = os.getcwd()
         path = path.replace('\\', '/')
 
@@ -1256,7 +1240,6 @@ def main():
 
                 start = time.time()
                 method, batch_size, embeddings_for_fabricante = 'fuzzy', 32, True
-                catalogo_embeddings_path = f"{path}/archivos/catalogo_embeddings.pkl"
                 tienda_embeddings_path = f"{path}/{target_tienda}_tienda_embeddings.pkl"
                 embeddings_fabricante_path = f"{path}/{target_tienda}_fabricante_tienda_embeddings.pkl"
 
@@ -1270,7 +1253,7 @@ def main():
                 df_catalogo, df_tienda = cargar_y_limpiar_articulos(df_catalogo, df_tienda)
 
                 st.write("Obteniendo datos del catálogo...")
-                catalogo_embeddings = obtener_embeddings_catalogo(catalogo_embeddings_path, df_catalogo, batch_size)
+                catalogo_embeddings = st.session_state['catalogo_embeddings']
 
                 st.write("Haciendo match de los productos...")
                 fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
