@@ -13,12 +13,10 @@ import json
 import re
 from unidecode import unidecode
 import os
-import pickle
 from rapidfuzz import fuzz
-from sklearn.metrics.pairwise import cosine_similarity
 import streamlit as st
 from io import BytesIO
-import requests
+import h5py
 
 # Nombres de las columnas
 # Variables para leer
@@ -789,6 +787,28 @@ def obtener_embeddings_fabricante(names, batch_size):
     return embeddings
 
 
+def obtener_embeddings_catalogo(df_catalogo, batch_size):
+    """
+        Obtiene los embeddings del catálogo.
+        Input:
+            catalogo_embeddings_path: str, ruta del archivo con los embeddings del catálogo.
+            df_catalogo: DataFrame, productos del catálogo.
+            batch_size: int, tamaño de los
+        Output:
+            catalogo_embeddings: list, lista de embeddings del catálogo.
+    """
+
+    catalogo_text = []
+    for i, marca in enumerate(df_catalogo[TIENDA_CATALOGO_MARCA]):
+        if marca.lower() in ['generico', 'génerico', 'genérico']:
+            catalogo_text.append(clean_text(f'{df_catalogo[TIENDA_CATALOGO_MARCA][i]}, {df_catalogo[CATALOGO_NOMBRE_SKU][i]}'))
+        else:
+            catalogo_text.append(clean_text(df_catalogo[CATALOGO_NOMBRE_SKU][i]))
+    catalogo_embeddings = obtener_embeddings_fabricante(df_catalogo[CATALOGO_NOMBRE_SKU], batch_size)
+    
+    return catalogo_embeddings
+
+
 def calc_similarity(tienda_embeddings, catalogo_embeddings, k):
     """
     Calcula la similitud entre los embeddings de la tienda y los embeddings del catálogo.
@@ -992,7 +1012,7 @@ def match_por_nombre(not_found, df_catalogo, batch_size, tienda_embeddings_path,
     return results
 
 
-def porcentaje_variable_match_fuzzy(df_response, column, column_catalogo, column_tienda):
+def porcentaje_variable_match(df_response, column, column_catalogo, column_tienda):
     """
     Calcula el porcentaje de match para cada variable (código de fabricante, marca, nombre, unidad de medida).
     Si la columna es de nombre quita la marca y la unidad del catálogo para comparar con la tienda.
@@ -1021,87 +1041,6 @@ def porcentaje_variable_match_fuzzy(df_response, column, column_catalogo, column
             df_response.at[i, column] = round(float(ratio))
 
     return df_response
-
-
-def porcentaje_variable_match_embeddings(df_response, column, column_catalogo, column_tienda, batch_size, target_tienda, path):
-    tienda_embedding_path_var = f'{path}/{target_tienda}_{column_tienda}_embeddings.pkl'
-    catalogo_embedding_path_var = f'{path}/{target_tienda}_{column_catalogo}_embeddings.pkl'
-
-    empty_list = set()
-    print(f"Obteniendo embeddings para {column_tienda}...")
-    if os.path.exists(tienda_embedding_path_var):
-        with open(tienda_embedding_path_var, 'rb') as f:
-            column_tienda_embeddings = pickle.load(f)
-    else:
-        tienda_text = []
-        for i in range(len(df_response)):
-            if df_response[column_tienda][i]:
-                tienda_text.append(str(clean_text(df_response[column_tienda][i])).strip())
-            else:
-                tienda_text.append('.')
-                empty_list.add(i)
-        column_tienda_embeddings = obtener_embeddings_fabricante(tienda_text, batch_size)
-        with open(tienda_embedding_path_var, 'wb') as f:
-            pickle.dump(column_tienda_embeddings, f)
-    
-    print(f"Obteniendo embeddings para {column_catalogo}...")
-    if os.path.exists(catalogo_embedding_path_var):
-        with open(catalogo_embedding_path_var, 'rb') as f:
-            column_catalogo_embeddings = pickle.load(f)
-    else:
-        catalogo_text = []
-        for i in range(len(df_response)):
-            if df_response[column_catalogo][i]:
-                catalogo_text.append(str(clean_text(df_response[column_catalogo][i])).strip())
-            else:
-                catalogo_text.append('.')
-                empty_list.add(i)
-        if column != PORCENTAJE_NOMBRE:
-            column_catalogo_embeddings = obtener_embeddings_fabricante(catalogo_text, batch_size)
-        else:
-            marcas_set = set(df_response[MARCA_CATALOGO])
-            unidades_set = set(df_response[UNIDAD_CATALOGO])
-            column_catalogo_text = []
-            for i in range(len(catalogo_text)):
-                name_split = catalogo_text[i].split(',')
-                if name_split[0].strip() in marcas_set:
-                    name_split.pop(0)
-                if name_split[-1].strip() in unidades_set:
-                    name_split.pop(-1)
-
-                name_split = ','.join(name_split).strip()
-                column_catalogo_text.append(name_split)
-            
-            column_catalogo_embeddings = obtener_embeddings_fabricante(column_catalogo_text, batch_size)
-
-        with open(catalogo_embedding_path_var, 'wb') as f:
-            pickle.dump(column_catalogo_embeddings, f)
-
-    for i in range(len(df_response)):
-        if i in empty_list:
-            df_response.at[i, column] = 0.0
-            continue
-        similarity = cosine_similarity(
-            [column_tienda_embeddings[i]], 
-            [column_catalogo_embeddings[i]]
-        )[0, 0] * 100 
-
-        df_response.at[i, column] = round(similarity)
-
-    return df_response
-
-
-def porcentaje_variable_match(method, df_response, column, column_catalogo, column_tienda, batch_size, target_tienda, path):
-    df_response[column] = 0.0
-    df_response[column] = df_response[column].astype(float)
-
-    match method:
-        case 'fuzzy':
-            return porcentaje_variable_match_fuzzy(df_response, column, column_catalogo, column_tienda)
-        case 'embeddings':
-            return porcentaje_variable_match_embeddings(df_response, column, column_catalogo, column_tienda, batch_size, target_tienda, path)
-        case _:
-            raise ValueError("Invalid method.")
 
 
 st.set_page_config(page_title="PIM", page_icon="archivos/construsync_logo.png", layout="wide")
@@ -1243,7 +1182,7 @@ def main():
                 df_catalogo, df_tienda = cargar_y_limpiar_articulos(df_catalogo, df_tienda)
 
                 st.write("Obteniendo datos del catálogo...")
-                catalogo_embeddings = 'a'
+                catalogo_embeddings = obtener_embeddings_catalogo(df_catalogo, batch_size)
 
                 st.write("Haciendo match de los productos...")
                 fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
