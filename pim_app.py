@@ -35,6 +35,7 @@ if api_key_input:
             azure_endpoint='2024-06-01'
         )
     client = st.session_state['client']
+    st.write(st.session_state['client'].get_api_key())
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
