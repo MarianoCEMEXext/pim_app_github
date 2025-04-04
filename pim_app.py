@@ -14,18 +14,10 @@ import re
 from unidecode import unidecode
 import os
 import pickle
-from dotenv import load_dotenv
 from rapidfuzz import fuzz
 from sklearn.metrics.pairwise import cosine_similarity
 import streamlit as st
 from io import BytesIO
-
-load_dotenv()
-client = AzureOpenAI(
-    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-    azure_endpoint=os.getenv("AZURE_OPENAI_API_ENDPOINT")
-)
 
 # Nombres de las columnas
 # Variables para leer
@@ -1137,6 +1129,19 @@ def porcentaje_variable_match(method, df_response, column, column_catalogo, colu
         case _:
             raise ValueError("Invalid method.")
 
+if 'api_key' not in st.session_state:
+    st.session_state['api_key'] = None
+
+api_key_input = st.text_input("Introduce tu clave API de Azure OpenAI", type="password")
+if api_key_input:
+    st.session_state['api_key'] = api_key_input
+    client = AzureOpenAI(
+        api_key=st.session_state['api_key'],
+        api_version='https://uscldgaioas01.openai.azure.com',
+        azure_endpoint='2024-06-01'
+    )
+else:
+    st.warning("Por favor, introduce tu clave API para continuar.")
 
 def main():
     st.set_page_config(page_title="PIM", page_icon="archivos/construsync_logo.png", layout="wide")
