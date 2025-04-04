@@ -1120,7 +1120,25 @@ if api_key_input:
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
+def load_pickle_from_dropbox(url):
+    response = requests.get(url)
+    response.raise_for_status()
+    return pickle.loads(response.content)
+
 def main():
+
+    dropbox_url = "https://www.dropbox.com/scl/fi/6041c611wakx5h5dlwgye/catalogo_embeddings.pkl?rlkey=2dx7inb727nvbi3gak0ht1p7c&st=o701jnrp&dl=1"
+
+    st.info("Trying to load the pickle file...")
+
+    try:
+        data = load_pickle_from_dropbox(dropbox_url)
+        st.success("File loaded!")
+        st.write("Type:", type(data))
+    except Exception as e:
+        st.error("Failed to load file")
+        st.exception(e)
+        
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
