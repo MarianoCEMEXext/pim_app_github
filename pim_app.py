@@ -1173,13 +1173,14 @@ def main():
     if 'catalogo_embeddings' not in st.session_state:
         st.session_state['catalogo_embeddings'] = None
 
-    catalogo_embeddings_input = st.file_uploader("Selecciona el archivo de embeddings del catálogo", type=['pkl'])
-    if catalogo_embeddings_input:
-        st.session_state['catalogo_embeddings'] = catalogo_embeddings_input.name.split('.')[0]
-        with open(catalogo_embeddings_input, 'rb') as f:
+    catalogo_embeddings_path_input = st.text_input("Introduce la ruta del archivo con los embeddings del catálogo", type="text")
+    if catalogo_embeddings_path_input:
+        st.session_state['catalogo_embeddings'] = catalogo_embeddings_path_input
+        with open(catalogo_embeddings_path_input, 'rb') as f:
             st.session_state['catalogo_embeddings'] = pickle.load(f)
     else:
-        st.warning("Por favor, selecciona el archivo de embeddings del catálogo para continuar.")
+        st.warning("Por favor, introduce la ruta del archivo con los embeddings del catálogo para continuar.")
+
 
     if st.session_state['api_key'] and st.session_state['catalogo_embeddings']:
         path = os.getcwd()
