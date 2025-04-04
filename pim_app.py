@@ -1127,7 +1127,7 @@ def load_pickle_from_dropbox(url):
     return pickle.loads(response.content)
 
 def main():
-    dropbox_url = "https://www.dropbox.com/s/abc123xyz/catalogo_embeddings.pkl?dl=1"  # replace with your real link
+    dropbox_url = "https://www.dropbox.com/scl/fi/6041c611wakx5h5dlwgye/catalogo_embeddings.pkl?rlkey=2dx7inb727nvbi3gak0ht1p7c&st=jvc8c0ys&dl=1"
     try:
         st.info("Downloading file from Dropbox...")
         catalogo_embeddings = load_pickle_from_dropbox(dropbox_url)
@@ -1136,7 +1136,7 @@ def main():
     except Exception as e:
         st.error("Something went wrong!")
         st.exception(e)
-        
+
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
