@@ -1071,11 +1071,15 @@ def load_h5_from_dropbox(url):
 def main():
     dropbox_url = "https://www.dropbox.com/scl/fi/5rqw813apngt02z4crzs9/catalogo_embeddings.h5?rlkey=jin702zk4602nlt5jyw9kq194&st=q17amnub&dl=1"
 
-    h5_file = load_h5_from_dropbox(dropbox_url)
-    dataset_name = list(h5_file.keys())[0]
-    catalogo_embeddings = h5_file[dataset_name][()]
+    try:
+        h5_file = load_h5_from_dropbox(dropbox_url)
+        dataset_name = list(h5_file.keys())[0]
+        catalogo_embeddings = h5_file[dataset_name][()]
 
-    h5_file.close()
+        h5_file.close()
+    except Exception as e:
+        st.error("Error loading the .h5 file:")
+        st.exception(e)
 
     def comments():
         """ Idea
