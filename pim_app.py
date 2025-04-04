@@ -18,6 +18,7 @@ from rapidfuzz import fuzz
 from sklearn.metrics.pairwise import cosine_similarity
 import streamlit as st
 from io import BytesIO
+import requests
 
 # Nombres de las columnas
 # Variables para leer
@@ -1170,17 +1171,12 @@ def main():
         """
         pass
     
+    file_id = '1wzHNCb1G-hRNfOkRVwWHBe18vlyGSfDa'
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    response = requests.get(url)
+    catalogo_embeddings =  pickle.loads(response.content)
     if 'catalogo_embeddings' not in st.session_state:
-        st.session_state['catalogo_embeddings'] = None
-
-    catalogo_embeddings_path_input = st.text_input("Introduce la ruta del archivo con los embeddings del catálogo", type="text")
-    if catalogo_embeddings_path_input:
-        st.session_state['catalogo_embeddings'] = catalogo_embeddings_path_input
-        with open(catalogo_embeddings_path_input, 'rb') as f:
-            st.session_state['catalogo_embeddings'] = pickle.load(f)
-    else:
-        st.warning("Por favor, introduce la ruta del archivo con los embeddings del catálogo para continuar.")
-
+        st.session_state['catalogo_embeddings'] = catalogo_embeddings
 
     if st.session_state['api_key'] and st.session_state['catalogo_embeddings']:
         path = os.getcwd()
