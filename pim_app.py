@@ -16,9 +16,7 @@ import os
 from rapidfuzz import fuzz
 import streamlit as st
 from io import BytesIO
-import requests
 import h5py
-import io
 
 # Nombres de las columnas
 # Variables para leer
@@ -1061,36 +1059,7 @@ if api_key_input:
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
-
-def load_h5_from_dropbox(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return h5py.File(io.BytesIO(response.content), 'r')
-
 def main():
-    st.title("Load HDF5 File from Dropbox")
-    
-    dropbox_url = "https://www.dropbox.com/scl/fi/5rqw813apngt02z4crzs9/catalogo_embeddings.h5?rlkey=jin702zk4602nlt5jyw9kq194&st=q17amnub&dl=1"
-    
-    try:
-        st.info("Downloading file from Dropbox...")
-        h5_file = load_h5_from_dropbox(dropbox_url)
-
-        st.success("File downloaded successfully.")
-
-        dataset_name = list(h5_file.keys())[0]
-        st.write(f"Found dataset: `{dataset_name}`")
-
-        catalogo_embeddings = h5_file[dataset_name][()]
-        st.success("Data loaded from HDF5 file.")
-        st.write("Shape of loaded data:", catalogo_embeddings.shape)
-
-        h5_file.close()
-        
-    except Exception as e:
-        st.error("Error loading the .h5 file:")
-        st.exception(e)
-
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
