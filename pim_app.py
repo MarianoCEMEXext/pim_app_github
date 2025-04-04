@@ -1120,6 +1120,46 @@ if api_key_input:
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
+
+@st.cache_data
+def download_large_file_from_gdrive(file_id):
+    def get_confirm_token(response):
+        for key, value in response.cookies.items():
+            if key.startswith('download_warning'):
+                return value
+        return None
+
+    def save_response_content(response):
+        return b"".join(response.iter_content(32768))  # 32KB chunks
+
+    URL = "https://docs.google.com/uc?export=download"
+    session = requests.Session()
+
+    response = session.get(URL, params={'id': file_id}, stream=True)
+    token = get_confirm_token(response)
+
+    if token:
+        params = {'id': file_id, 'confirm': token}
+        response = session.get(URL, params=params, stream=True)
+
+    return save_response_content(response)
+
+def load_pickle_from_gdrive(file_id):
+    content = download_large_file_from_gdrive(file_id)
+    return pickle.loads(content)
+
+# Your file ID
+file_id = "1wzHNCb1G-hRNfOkRVwWHBe18vlyGSfDa"
+
+try:
+    catalogo_embeddings = load_pickle_from_gdrive(file_id)
+    st.success("Pickle file loaded successfully!")
+    # Do something with catalogo_embeddings...
+except Exception as e:
+    st.error("Could not load pickle file.")
+    st.exception(e)
+
+
 def main():
     def comments():
         """ Idea
@@ -1170,14 +1210,6 @@ def main():
                 SUPLIMAT_sincambios con fuzzy -> 101 segs
         """
         pass
-    
-    file_id = '1wzHNCb1G-hRNfOkRVwWHBe18vlyGSfDa'
-    url = f"https://drive.google.com/uc?export=download&id={file_id}"
-    response = requests.get(url)
-    st.write(response.content)
-    catalogo_embeddings =  pickle.loads(response.content)
-    if 'catalogo_embeddings' not in st.session_state:
-        st.session_state['catalogo_embeddings'] = catalogo_embeddings
 
     if st.session_state['api_key'] and st.session_state['catalogo_embeddings']:
         path = os.getcwd()
