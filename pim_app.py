@@ -25,7 +25,7 @@ st.set_page_config(page_title="PIM", page_icon="archivos/construsync_logo.png", 
 if 'api_key' not in st.session_state:
     st.session_state['api_key'] = None
 
-api_key_input = st.text_input("Introduce tu clave API de Azure OpenAI", type="password")
+api_key_input = st.text_input("Introduce tu clave", type="password")
 if api_key_input:
     st.session_state['api_key'] = api_key_input
     if 'client' not in st.session_state:
