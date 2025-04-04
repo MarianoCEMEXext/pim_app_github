@@ -788,28 +788,6 @@ def obtener_embeddings_fabricante(names, batch_size):
     return embeddings
 
 
-def obtener_embeddings_catalogo(df_catalogo, batch_size):
-    """
-        Obtiene los embeddings del catálogo.
-        Input:
-            catalogo_embeddings_path: str, ruta del archivo con los embeddings del catálogo.
-            df_catalogo: DataFrame, productos del catálogo.
-            batch_size: int, tamaño de los
-        Output:
-            catalogo_embeddings: list, lista de embeddings del catálogo.
-    """
-
-    catalogo_text = []
-    for i, marca in enumerate(df_catalogo[TIENDA_CATALOGO_MARCA]):
-        if marca.lower() in ['generico', 'génerico', 'genérico']:
-            catalogo_text.append(clean_text(f'{df_catalogo[TIENDA_CATALOGO_MARCA][i]}, {df_catalogo[CATALOGO_NOMBRE_SKU][i]}'))
-        else:
-            catalogo_text.append(clean_text(df_catalogo[CATALOGO_NOMBRE_SKU][i]))
-    catalogo_embeddings = obtener_embeddings_fabricante(df_catalogo[CATALOGO_NOMBRE_SKU], batch_size)
-    
-    return catalogo_embeddings
-
-
 def calc_similarity(tienda_embeddings, catalogo_embeddings, k):
     """
     Calcula la similitud entre los embeddings de la tienda y los embeddings del catálogo.
@@ -1060,7 +1038,7 @@ if api_key_input:
 else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
-def load_from_huggingface():
+def obtener_embeddings_catalogo():
     file_path = hf_hub_download(
         repo_id="Mariano132/catalogo_embeddings",
         filename="catalogo_embeddings.h5",
@@ -1073,7 +1051,6 @@ def load_from_huggingface():
     return embeddings
 
 def main():
-    catalogo_embeddings = load_from_huggingface()
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
@@ -1196,7 +1173,8 @@ def main():
                 df_catalogo, df_tienda = cargar_y_limpiar_articulos(df_catalogo, df_tienda)
 
                 st.write("Obteniendo datos del catálogo...")
-                catalogo_embeddings = obtener_embeddings_catalogo(df_catalogo, batch_size)
+                catalogo_embeddings = obtener_embeddings_catalogo()
+
 
                 st.write("Haciendo match de los productos...")
                 fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
