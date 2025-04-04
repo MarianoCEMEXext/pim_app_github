@@ -795,6 +795,7 @@ def obtener_embeddings_fabricante(names, batch_size):
     
     embeddings = []
     for i in (range(0, len(names), batch_size)):
+        st.write(i)
         batch = names[i:i + batch_size]
         embeddings_batch = client.embeddings.create(
             input=batch,
@@ -869,7 +870,6 @@ def match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for
     catalogo_marca = df_catalogo[TIENDA_CATALOGO_MARCA]
     catalogo_unidad_medida = df_catalogo[CATALOGO_UNIDAD_MEDIDA]
 
-    st.write('Diccionario')
     catalogo_dict = {
         numero_fabricante: (codigo_sku, nombre_sku, marca, unidad_medida)
         for numero_fabricante, codigo_sku, nombre_sku, marca, unidad_medida in zip(
@@ -926,7 +926,6 @@ def match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for
         for i, fabricante in enumerate(fabricante_bad_marca_bad_unidad):
             names.append(clean_text(f"{fabricante[MARCA_CATALOGO]}, {fabricante[NOMBRE_TIENDA]}, {fabricante[UNIDAD_CATALOGO]}")) 
 
-        st.write('Empezar embeddings')
         tienda_embeddings = obtener_embeddings_fabricante(names, batch_size)
     
         D, I = calc_similarity(tienda_embeddings, catalogo_embeddings, 1)
