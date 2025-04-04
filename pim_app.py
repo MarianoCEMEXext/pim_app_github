@@ -1196,137 +1196,138 @@ def main():
                 SUPLIMAT_sincambios con fuzzy -> 101 segs
         """
         pass
+    
+    if st.session_state['api_key']:
+        path = os.getcwd()
+        path = path.replace('\\', '/')
 
-    path = os.getcwd()
-    path = path.replace('\\', '/')
+        title1, title2 = st.columns([1,9])
+        with title1:
+            st.image("archivos/construsync_logo.png")
+        with title2:
+            st.title("PIM Construsync")
 
-    title1, title2 = st.columns([1,9])
-    with title1:
-        st.image("archivos/construsync_logo.png")
-    with title2:
-        st.title("PIM Construsync")
+        st.header("Especificaciones")
+        st.caption(
+            "**Los nombres de las columnas pueden tener acentos y mayúsculas o minúsculas. "
+            "Pueden haber más columnas en los archivos. "
+            "Tiene que ser la primer pestaña del archivo.**"
+        )
+        col1, col2 = st.columns(2)
+        col1.caption("""
+            - **El archivo del catálogo debe contener las columnas:**
+                - **CODIGO_FABRICANTE**
+                - **NOMBRE_SKU**
+                - **UNIDAD DE VENTA**
+                - **MARCA**
+                - **CODIGO_SKU**
+        """)
+        col2.caption("""
+            - **El archivo de la tienda debe contener las columnas:**
+                - **NUMERO DE FABRICANTE**
+                - **NOMBRE**
+                - **UNIDAD DE MEDIDA**
+                - **MARCA**
+        """)
 
-    st.header("Especificaciones")
-    st.caption(
-        "**Los nombres de las columnas pueden tener acentos y mayúsculas o minúsculas. "
-        "Pueden haber más columnas en los archivos. "
-        "Tiene que ser la primer pestaña del archivo.**"
-    )
-    col1, col2 = st.columns(2)
-    col1.caption("""
-        - **El archivo del catálogo debe contener las columnas:**
-            - **CODIGO_FABRICANTE**
-            - **NOMBRE_SKU**
-            - **UNIDAD DE VENTA**
-            - **MARCA**
-            - **CODIGO_SKU**
-    """)
-    col2.caption("""
-        - **El archivo de la tienda debe contener las columnas:**
-            - **NUMERO DE FABRICANTE**
-            - **NOMBRE**
-            - **UNIDAD DE MEDIDA**
-            - **MARCA**
-    """)
-
-    if 'done' not in st.session_state:
-        st.session_state['done'] = False
-
-    tienda_file = st.file_uploader("Selecciona el archivo de la tienda", type=['xlsx'])
-    if tienda_file:
-        target_tienda = tienda_file.name.split('.')[0]
-
-    processcol1, processcol2 = st.columns([1, 9])
-    rescol1, rescol2 = st.columns(2)
-
-    with processcol1:
-        clicked = st.button("Procesar", disabled=not tienda_file)
-
-    if clicked:
-        with st.status("Procesando...", expanded=True) as status:
-            for key in list(st.session_state.keys()):
-                if key != 'done':
-                    del st.session_state[key]
+        if 'done' not in st.session_state:
             st.session_state['done'] = False
 
-            processcol2.empty()
-            rescol1.empty()
-            rescol2.empty()
+        tienda_file = st.file_uploader("Selecciona el archivo de la tienda", type=['xlsx'])
+        if tienda_file:
+            target_tienda = tienda_file.name.split('.')[0]
 
-            start = time.time()
-            method, batch_size, embeddings_for_fabricante = 'fuzzy', 32, True
-            catalogo_embeddings_path = f"{path}/archivos/catalogo_embeddings.pkl"
-            tienda_embeddings_path = f"{path}/{target_tienda}_tienda_embeddings.pkl"
-            embeddings_fabricante_path = f"{path}/{target_tienda}_fabricante_tienda_embeddings.pkl"
+        processcol1, processcol2 = st.columns([1, 9])
+        rescol1, rescol2 = st.columns(2)
 
-            st.write("Cargando catálogos...")
-            df_catalogo = pd.read_excel(f'{path}/archivos/ARTICULOSCONPIM.xlsx').astype(str)
-            df_tienda = pd.read_excel(tienda_file).astype(str)
+        with processcol1:
+            clicked = st.button("Procesar", disabled=not tienda_file)
 
-            st.write("Limpiando catálogos...")
-            df_tienda.columns = [unidecode(col.strip().upper()) for col in df_tienda.columns]
-            df_catalogo.columns = [unidecode(col.strip().upper()) for col in df_catalogo.columns]    
-            df_catalogo, df_tienda = cargar_y_limpiar_articulos(df_catalogo, df_tienda)
+        if clicked:
+            with st.status("Procesando...", expanded=True) as status:
+                for key in list(st.session_state.keys()):
+                    if key != 'done':
+                        del st.session_state[key]
+                st.session_state['done'] = False
 
-            st.write("Obteniendo datos del catálogo...")
-            catalogo_embeddings = obtener_embeddings_catalogo(catalogo_embeddings_path, df_catalogo, batch_size)
+                processcol2.empty()
+                rescol1.empty()
+                rescol2.empty()
 
-            st.write("Haciendo match de los productos...")
-            fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
-            nombres_match = match_por_nombre(not_found, df_catalogo, batch_size, tienda_embeddings_path, catalogo_embeddings)
-        
-            fabricantes_match.extend(nombres_match)
-            df_response = pd.DataFrame(fabricantes_match)
+                start = time.time()
+                method, batch_size, embeddings_for_fabricante = 'fuzzy', 32, True
+                catalogo_embeddings_path = f"{path}/archivos/catalogo_embeddings.pkl"
+                tienda_embeddings_path = f"{path}/{target_tienda}_tienda_embeddings.pkl"
+                embeddings_fabricante_path = f"{path}/{target_tienda}_fabricante_tienda_embeddings.pkl"
 
-            st.write("Calculando similitud por variable...")
-            df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_CODIGO_FABRICANTE, CODIGO_FABRICANTE_CATALOGO, CODIGO_FABRICANTE_TIENDA, batch_size, target_tienda, path)
-            df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_NOMBRE, NOMBRE_CATALOGO, NOMBRE_TIENDA, batch_size, target_tienda, path)
-            df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_MARCA, MARCA_CATALOGO, MARCA_TIENDA, batch_size, target_tienda, path)
-            df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_UNIDAD, UNIDAD_CATALOGO, UNIDAD_TIENDA, batch_size, target_tienda, path)
+                st.write("Cargando catálogos...")
+                df_catalogo = pd.read_excel(f'{path}/archivos/ARTICULOSCONPIM.xlsx').astype(str)
+                df_tienda = pd.read_excel(tienda_file).astype(str)
+
+                st.write("Limpiando catálogos...")
+                df_tienda.columns = [unidecode(col.strip().upper()) for col in df_tienda.columns]
+                df_catalogo.columns = [unidecode(col.strip().upper()) for col in df_catalogo.columns]    
+                df_catalogo, df_tienda = cargar_y_limpiar_articulos(df_catalogo, df_tienda)
+
+                st.write("Obteniendo datos del catálogo...")
+                catalogo_embeddings = obtener_embeddings_catalogo(catalogo_embeddings_path, df_catalogo, batch_size)
+
+                st.write("Haciendo match de los productos...")
+                fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
+                nombres_match = match_por_nombre(not_found, df_catalogo, batch_size, tienda_embeddings_path, catalogo_embeddings)
             
-            if 'output' not in st.session_state:
-                st.session_state['output'] = BytesIO()
-            if 'response' not in st.session_state:
-                st.session_state['response'] = df_response
-            if 'excel_name' not in st.session_state:
-                st.session_state['excel_name'] = f"{target_tienda}.xlsx"
-            if 'num_products' not in st.session_state:
-                st.session_state['num_products'] = len(df_tienda['NOMBRE'])
-            if 'time' not in st.session_state:
-                elapsed_time = round(time.time() - start)
-                if elapsed_time > 60:
-                    minutes = elapsed_time // 60
-                    seconds = elapsed_time % 60
-                    minutos_text = "minutos" if minutes > 1 else "minuto"
-                    if seconds == 0:
-                        st.session_state['time'] = f"Tiempo de ejecución: {minutes} {minutos_text}"
+                fabricantes_match.extend(nombres_match)
+                df_response = pd.DataFrame(fabricantes_match)
+
+                st.write("Calculando similitud por variable...")
+                df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_CODIGO_FABRICANTE, CODIGO_FABRICANTE_CATALOGO, CODIGO_FABRICANTE_TIENDA, batch_size, target_tienda, path)
+                df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_NOMBRE, NOMBRE_CATALOGO, NOMBRE_TIENDA, batch_size, target_tienda, path)
+                df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_MARCA, MARCA_CATALOGO, MARCA_TIENDA, batch_size, target_tienda, path)
+                df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_UNIDAD, UNIDAD_CATALOGO, UNIDAD_TIENDA, batch_size, target_tienda, path)
+                
+                if 'output' not in st.session_state:
+                    st.session_state['output'] = BytesIO()
+                if 'response' not in st.session_state:
+                    st.session_state['response'] = df_response
+                if 'excel_name' not in st.session_state:
+                    st.session_state['excel_name'] = f"{target_tienda}.xlsx"
+                if 'num_products' not in st.session_state:
+                    st.session_state['num_products'] = len(df_tienda['NOMBRE'])
+                if 'time' not in st.session_state:
+                    elapsed_time = round(time.time() - start)
+                    if elapsed_time > 60:
+                        minutes = elapsed_time // 60
+                        seconds = elapsed_time % 60
+                        minutos_text = "minutos" if minutes > 1 else "minuto"
+                        if seconds == 0:
+                            st.session_state['time'] = f"Tiempo de ejecución: {minutes} {minutos_text}"
+                        else:
+                            st.session_state['time'] = f"Tiempo de ejecución: {minutes} {minutos_text} y {seconds} segundos"
                     else:
-                        st.session_state['time'] = f"Tiempo de ejecución: {minutes} {minutos_text} y {seconds} segundos"
-                else:
-                    st.session_state['time'] = f"Tiempo de ejecución: {elapsed_time} segundos"
-            with pd.ExcelWriter(st.session_state['output'], engine="openpyxl") as writer:
-                st.session_state['response'].to_excel(writer, index=False)
-            st.session_state['output'].seek(0)
+                        st.session_state['time'] = f"Tiempo de ejecución: {elapsed_time} segundos"
+                with pd.ExcelWriter(st.session_state['output'], engine="openpyxl") as writer:
+                    st.session_state['response'].to_excel(writer, index=False)
+                st.session_state['output'].seek(0)
 
-            st.session_state['done'] = True
+                st.session_state['done'] = True
 
-            status.update(
-                label="Proceso completado!", state="complete", expanded=False
-            )
+                status.update(
+                    label="Proceso completado!", state="complete", expanded=False
+                )
 
-    if st.session_state['done']:
-        with processcol2:
-            st.download_button(
-                label="Descargar Excel",
-                data = st.session_state['output'],
-                file_name= f'resultados_{st.session_state['excel_name']}',
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        if st.session_state['done']:
+            with processcol2:
+                st.download_button(
+                    label="Descargar Excel",
+                    data = st.session_state['output'],
+                    file_name= f'resultados_{st.session_state['excel_name']}',
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
-        with rescol1:
-            st.success(f"{st.session_state['num_products']} productos procesados")
-        with rescol2:
-            st.info(st.session_state['time'])
+            with rescol1:
+                st.success(f"{st.session_state['num_products']} productos procesados")
+            with rescol2:
+                st.info(st.session_state['time'])
 
 if __name__ == '__main__':
     main()
