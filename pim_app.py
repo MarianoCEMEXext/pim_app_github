@@ -1179,12 +1179,11 @@ def main():
                 catalogo_embeddings = obtener_embeddings_catalogo()
 
                 st.write("Haciendo match de los productos...")
-                # fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
-                # nombres_match = match_por_nombre(not_found, df_catalogo, batch_size, tienda_embeddings_path, catalogo_embeddings)
+                fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
+                nombres_match = match_por_nombre(not_found, df_catalogo, batch_size, tienda_embeddings_path, catalogo_embeddings)
             
-                # fabricantes_match.extend(nombres_match)
-                # df_response = pd.DataFrame(fabricantes_match)
-                time.sleep(1000)
+                fabricantes_match.extend(nombres_match)
+                df_response = pd.DataFrame(fabricantes_match)
                 st.write("Calculando similitud por variable...")
                 df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_CODIGO_FABRICANTE, CODIGO_FABRICANTE_CATALOGO, CODIGO_FABRICANTE_TIENDA, batch_size, target_tienda, path)
                 df_response = porcentaje_variable_match(method, df_response, PORCENTAJE_NOMBRE, NOMBRE_CATALOGO, NOMBRE_TIENDA, batch_size, target_tienda, path)
