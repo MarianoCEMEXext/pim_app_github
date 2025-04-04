@@ -1121,25 +1121,27 @@ else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
 
-import gdown
+import streamlit as st
+import requests
+import pickle
 
 @st.cache_data
-def load_pickle_with_gdown(file_id):
-    url = f"https://drive.google.com/uc?id={file_id}"
-    output = "/tmp/catalogo_embeddings.pkl"  # temp file path
-    gdown.download(url, output, quiet=False)
-    
-    with open(output, "rb") as f:
-        return pickle.load(f)
+def load_pickle_from_dropbox(url):
+    response = requests.get(url)
+    response.raise_for_status()  # Will raise an error if the download fails
+    return pickle.loads(response.content)
 
-file_id = "1wzHNCb1G-hRNfOkRVwWHBe18vlyGSfDa"
+# Replace this with your direct download link (dl=1)
+dropbox_url = "https://www.dropbox.com/scl/fi/6041c611wakx5h5dlwgye/catalogo_embeddings.pkl?rlkey=2dx7inb727nvbi3gak0ht1p7c&st=jvc8c0ys&dl=1"
 
 try:
-    catalogo_embeddings = load_pickle_with_gdown(file_id)
-    st.success("Pickle file loaded successfully!")
+    catalogo_embeddings = load_pickle_from_dropbox(dropbox_url)
+    st.success("Pickle file loaded from Dropbox successfully!")
+    # Do something with catalogo_embeddings...
 except Exception as e:
-    st.error("Failed to load pickle file.")
+    st.error("Could not load the pickle file from Dropbox.")
     st.exception(e)
+
 
 
 def main():
