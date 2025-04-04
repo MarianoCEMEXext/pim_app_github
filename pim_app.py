@@ -889,6 +889,8 @@ def match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for
     results, not_found, fabricante_bad_marca_bad_unidad = [], [], []
     # Si es match añadir a results, si no, añadir a not_found
     # Si es match y tiene unidades y marcas diferentes, añadir a fabricante_bad_marca_bad_unidad
+    st.write(f"Length of tienda_numero_fabricante: {len(tienda_numero_fabricante)}")
+    st.write(f"Length of catalogo_numero_fabricante: {len(catalogo_numero_fabricante)}")
     for i, fabricante in enumerate(tienda_numero_fabricante):
         if fabricante.strip() in catalogo_dict and fabricante.strip() != 'nan':
             is_same_marcas = tienda_marca[i].lower() == catalogo_dict[fabricante.strip()][2].lower()
@@ -1179,6 +1181,11 @@ def main():
                 catalogo_embeddings = obtener_embeddings_catalogo()
 
                 st.write("Haciendo match de los productos...")
+                if 'client' in st.session_state:
+                    client = st.session_state['client']
+                else:
+                    st.error("API client is not initialized. Please input your API key.")
+
                 fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
                 nombres_match = match_por_nombre(not_found, df_catalogo, batch_size, tienda_embeddings_path, catalogo_embeddings)
             
