@@ -17,6 +17,7 @@ from rapidfuzz import fuzz
 import streamlit as st
 from io import BytesIO
 import h5py
+from huggingface_hub import hf_hub_download
 
 # Nombres de las columnas
 # Variables para leer
@@ -1060,6 +1061,10 @@ else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
 def main():
+    file_path = hf_hub_download(repo_id="Mariano132/catalogo_embeddings", filename="catalogo_embeddings.h5")
+    with h5py.File(file_path, "r") as f:
+        dataset_name = list(f.keys())[0]
+        catalogo_embeddings = f[dataset_name][()]
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
