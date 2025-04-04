@@ -782,6 +782,7 @@ def clean_text(sentence):
     return sentence
 
 
+@st.cache_data
 def obtener_embeddings_fabricante(names, batch_size):
     """
     Obtiene los embeddings de los nombres de los fabricantes.
@@ -791,22 +792,19 @@ def obtener_embeddings_fabricante(names, batch_size):
     Output:
         embeddings: list, lista de embeddings de los nombres de los fabricantes.
     """
-    embeddings = []
-    try:
-        for i in range(0, len(names), batch_size):
-            batch = names[i:i + batch_size]
-            embeddings_batch = client.embeddings.create(
-                input=batch,
-                model="CNS_Construsync_02_ada002"
-            )
-            response_json = embeddings_batch.model_dump_json(indent=2)
-            response_dict = json.loads(response_json)
-            batch_embeddings = [r['embedding'] for r in response_dict['data']]
-            embeddings.extend(batch_embeddings)
-    except Exception as e:
-        st.error(f"Error al obtener embeddings: {str(e)}")
-        return []
     
+    embeddings = []
+    for i in (range(0, len(names), batch_size)):
+        batch = names[i:i + batch_size]
+        embeddings_batch = client.embeddings.create(
+            input=batch,
+            model="CNS_Construsync_02_ada002"
+        )
+        response_json = embeddings_batch.model_dump_json(indent=2)
+        response_dict = json.loads(response_json)
+        batch_embeddings = [r['embedding'] for r in response_dict['data']]
+        embeddings.extend(batch_embeddings)
+            
     return embeddings
 
 
