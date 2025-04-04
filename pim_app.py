@@ -19,6 +19,25 @@ from io import BytesIO
 import h5py
 from huggingface_hub import hf_hub_download
 
+
+st.set_page_config(page_title="PIM", page_icon="archivos/construsync_logo.png", layout="wide")
+
+if 'api_key' not in st.session_state:
+    st.session_state['api_key'] = None
+
+api_key_input = st.text_input("Introduce tu clave API de Azure OpenAI", type="password")
+if api_key_input:
+    st.session_state['api_key'] = api_key_input
+    if 'client' not in st.session_state:
+        st.session_state['client'] = AzureOpenAI(
+            api_key=st.session_state['api_key'],
+            api_version='https://uscldgaioas01.openai.azure.com',
+            azure_endpoint='2024-06-01'
+        )
+    client = st.session_state['client']
+else:
+    st.warning("Por favor, introduce tu clave API para continuar.")
+
 # Nombres de las columnas
 # Variables para leer
 TIENDA_NUMERO_FABRICANTE = 'NUMERO DE FABRICANTE'
@@ -1021,23 +1040,6 @@ def porcentaje_variable_match(df_response, column, column_catalogo, column_tiend
 
     return df_response
 
-
-st.set_page_config(page_title="PIM", page_icon="archivos/construsync_logo.png", layout="wide")
-
-if 'api_key' not in st.session_state:
-    st.session_state['api_key'] = None
-
-api_key_input = st.text_input("Introduce tu clave API de Azure OpenAI", type="password")
-if api_key_input:
-    st.session_state['api_key'] = api_key_input
-    client = AzureOpenAI(
-        api_key=st.session_state['api_key'],
-        api_version='https://uscldgaioas01.openai.azure.com',
-        azure_endpoint='2024-06-01'
-    )
-else:
-    st.warning("Por favor, introduce tu clave API para continuar.")
-
 def obtener_embeddings_catalogo():
     file_path = hf_hub_download(
         repo_id="Mariano132/catalogo_embeddings",
@@ -1174,7 +1176,6 @@ def main():
 
                 st.write("Obteniendo datos del catálogo...")
                 catalogo_embeddings = obtener_embeddings_catalogo()
-
 
                 st.write("Haciendo match de los productos...")
                 fabricantes_match, not_found = match_fabricante_producto(df_tienda, df_catalogo, batch_size, embeddings_for_fabricante, embeddings_fabricante_path, catalogo_embeddings)
