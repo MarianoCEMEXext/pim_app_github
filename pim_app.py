@@ -1129,6 +1129,9 @@ def porcentaje_variable_match(method, df_response, column, column_catalogo, colu
         case _:
             raise ValueError("Invalid method.")
 
+
+st.set_page_config(page_title="PIM", page_icon="archivos/construsync_logo.png", layout="wide")
+
 if 'api_key' not in st.session_state:
     st.session_state['api_key'] = None
 
@@ -1144,8 +1147,6 @@ else:
     st.warning("Por favor, introduce tu clave API para continuar.")
 
 def main():
-    st.set_page_config(page_title="PIM", page_icon="archivos/construsync_logo.png", layout="wide")
-
     def comments():
         """ Idea
             Tener una search bar para hacer semantic search / vector search
